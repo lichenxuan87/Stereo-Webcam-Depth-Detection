@@ -32,7 +32,7 @@
 #define LEFT_MOUSE_BUTTON				1
 #define RIGHT_MOUSE_BUTTON				2
 
-#define BLOB_TRACKING					0
+#define BLOB_TRACKING					1
 
 
 #define MEMORY_WEIGHTING			0

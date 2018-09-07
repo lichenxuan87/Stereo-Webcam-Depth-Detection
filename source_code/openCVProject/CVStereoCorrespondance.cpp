@@ -233,29 +233,34 @@ void calculate_correspondance_depth_tracking(cv::vector<cv::KeyPoint> keyPoints,
 
 			//Overaly text onto image displayign dpeth data.
 			for(int i=0; i<keyPoints.size();i++){
-			        //TODO: X/Y is inverted
-					cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(keyPoints[i].pt.y,keyPoints[i].pt.x);
-					sprintf(image_text,".   %1.2f",Depth_from_proj[2]);
-					putText(global_data::image_left_rectified, image_text , keyPoints[i].pt, CV_FONT_HERSHEY_COMPLEX_SMALL, 2, Scalar(250,100,50));
+			    //TODO: X/Y is inverted
+                cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(keyPoints[i].pt.y,keyPoints[i].pt.x);
+
+
+                if (Depth_from_proj[2] > 0) {
+                    sprintf(image_text,".   %1.2f",Depth_from_proj[2]);
+
+                    putText(global_data::image_left_rectified, image_text , keyPoints[i].pt, CV_FONT_HERSHEY_COMPLEX_SMALL, 2, Scalar(50,100,250));
+                }
 			}
 
 }
 
 //Threshold image to RED,GREEN or BLUE for blob detection and thus object tracking.
 cv::Mat GetThresholdedImage_RED(Mat& frame){
-    //boxFilter(frame, frame, CV_GAUSSIAN,Size(3,3));
-	   cv::Mat imgHSV(frame.size(),CV_8UC3);;
-	   cvtColor(frame, imgHSV, CV_BGR2HSV);
-	   cv::Mat imgThresh(imgHSV.size(),CV_8U);
+    GaussianBlur(frame, frame, Size(3,3), 0, 0);
+    cv::Mat imgHSV(frame.size(),CV_8UC3);;
+    cvtColor(frame, imgHSV, CV_BGR2HSV);
+    cv::Mat imgThresh(imgHSV.size(),CV_8U);
 
-       //cvInRangeS(frame,  CV_RGB(180,   0,  0),  CV_RGB(255,100,100), imgThresh); //RED
-	   //cvInRangeS(frame,  CV_RGB(  0, 150,  0),  CV_RGB(150,255,150), imgThresh); //GREEN
-	   //cvInRangeS(frame,  CV_RGB(  0,   0,150),  CV_RGB(100,100,255), imgThresh); //BLUE
-       inRange(frame,  Scalar(50, 50,  170),  Scalar(150,150,255), imgThresh); // For blue file archive
+    //cvInRangeS(frame,  CV_RGB(180,   0,  0),  CV_RGB(255,100,100), imgThresh); //RED
+    //cvInRangeS(frame,  CV_RGB(  0, 150,  0),  CV_RGB(150,255,150), imgThresh); //GREEN
+    //cvInRangeS(frame,  CV_RGB(  0,   0,150),  CV_RGB(100,100,255), imgThresh); //BLUE
+    inRange(frame, Scalar(130, 70, 60),  Scalar(200, 130, 100), imgThresh); // For blue file archive
 
 
-       boxFilter(imgThresh, imgThresh, CV_GAUSSIAN, Size(3,3));
-       return imgThresh;
+    GaussianBlur(frame, frame, Size(3,3), 0, 0);
+    return imgThresh;
 } 
 
 
