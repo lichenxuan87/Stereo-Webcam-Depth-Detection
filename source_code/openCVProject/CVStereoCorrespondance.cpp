@@ -224,27 +224,52 @@ int calculate_correspondance_depth(Point left_point ,Mat& Q){
 
 void calculate_correspondance_depth_tracking(cv::vector<cv::KeyPoint> keyPoints, Mat& Q){
 
-			//Calculate Depth From3D Projection Matrix
-			cv::Mat New_Image3D_left=correspondance_data::Image3D_left;
-			char image_text[50];
-			//CvFont font;
+    //Calculate Depth From3D Projection Matrix
+    cv::Mat New_Image3D_left=correspondance_data::Image3D_left;
+    char image_text[50];
 
-			//cvInitFont( &font, CV_FONT_HERSHEY_COMPLEX_SMALL, 1.4, 1.4, 0, 2, 8);
-
-			//Overaly text onto image displayign dpeth data.
-			for(int i=0; i<keyPoints.size();i++){
-			    //TODO: X/Y is inverted
-                cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(keyPoints[i].pt.y,keyPoints[i].pt.x);
+    //Overaly text onto image displayign dpeth data.
+    for(int i=0; i<keyPoints.size();i++){
+        cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(keyPoints[i].pt.y,keyPoints[i].pt.x);
 
 
-                if (Depth_from_proj[2] > 0) {
-                    sprintf(image_text,".   %1.2f",Depth_from_proj[2]);
+        if (Depth_from_proj[2] > 0) {
+            sprintf(image_text,".   %1.2f",Depth_from_proj[2]);
 
-                    putText(global_data::image_left_rectified, image_text , keyPoints[i].pt, CV_FONT_HERSHEY_COMPLEX_SMALL, 2, Scalar(50,100,250));
-                }
-			}
+            putText(global_data::image_left_rectified, image_text , keyPoints[i].pt, CV_FONT_HERSHEY_COMPLEX_SMALL, 2, Scalar(50,100,250));
+        }
+    }
 
 }
+
+
+double calculate_correspondance_depth_tracking(cv::Rect boundary)
+{
+    cv::Mat New_Image3D_left=correspondance_data::Image3D_left;
+
+    //char image_text[50];
+
+    //Overlay text onto image displaying depth data.
+    double averageDepth = 0;
+    int validNumber = 0;
+    for(int x = boundary.x + boundary.width/4; x < boundary.x + 3*boundary.width/4; x++){
+        for (int y = boundary.y + boundary.height/4; y < boundary.y + 3*boundary.height/4; y++) {
+            cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(x, y);
+
+            if (Depth_from_proj[2] > 0 && Depth_from_proj[2] < 1000) {
+                averageDepth += Depth_from_proj[2];
+
+                validNumber++;
+            }
+        }
+    }
+
+    if (validNumber != 0)
+        averageDepth /= validNumber;
+
+    return averageDepth;
+}
+
 
 //Threshold image to RED,GREEN or BLUE for blob detection and thus object tracking.
 cv::Mat GetThresholdedImage_RED(Mat& frame){

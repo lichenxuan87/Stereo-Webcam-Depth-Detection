@@ -30,6 +30,8 @@
 #include "globaldata.h"
 #include "stdafx.h"
 
+#include "facedetection_camera.h"
+
 
 
 /******* Shared Variables ******/
@@ -222,6 +224,38 @@ int main(int argc, const char* argv[])
 		calculate_correspondance_depth_tracking(keyPoints, main_variables::Q);
 		#endif
 		
+        #if FACE_DETECTION
+		vector<Rect> faceBoundaries = detectFaceLocation(correspondance_data::grey_left_r);
+//
+//		for (int i=0; i<faceBoundaries.size(); i++){
+//		    keyPoints.push_back(KeyPoint((faceBoundaries[i].x + faceBoundaries[i].width)/2,
+//                                          (faceBoundaries[i].y + faceBoundaries[i].height)/2, 1));
+//
+//		    cv::rectangle(global_data::image_left_rectified, faceBoundaries[i], CV_RGB(250, 230, 215), 4, 8, 0);
+//        }
+//
+//		//CALCULATE DEPTH OBJECT DEPTH FROM DISPARITY MAP
+//        calculate_correspondance_depth_tracking(keyPoints, main_variables::Q);
+//
+//        keyPoints.clear();
+
+		char image_text[50];
+		int x_center = 0;
+		int y_center = 0;
+		for (int i = 0; i < faceBoundaries.size(); i++) {
+		    cv::rectangle(global_data::image_left_rectified, faceBoundaries[i], CV_RGB(250, 230, 215), 4, 8, 0);
+		    x_center = (faceBoundaries[i].x + faceBoundaries[i].width)/2;
+		    y_center = (faceBoundaries[i].y + faceBoundaries[i].height)/2;
+
+		    double averageDepth = calculate_correspondance_depth_tracking(faceBoundaries[i]);
+
+		    if (averageDepth > 0) {
+		        sprintf(image_text,".   %1.2f", averageDepth);
+		        putText(global_data::image_left_rectified, image_text , Point(x_center, y_center), CV_FONT_HERSHEY_COMPLEX_SMALL, 2, Scalar(50,100,250));
+		    }
+        }
+
+        #endif
 
 		// UPDATE DISPLAY
 		display_update(CAM1|CAM2|DISP|PROJ|RAW_DISP|PARAM);

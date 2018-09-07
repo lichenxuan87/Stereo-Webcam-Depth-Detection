@@ -1,0 +1,4 @@
+/home/peter/project/samples/Stereo-Webcam-Depth-Detection/source_code/openCVProject/UseFaceDetection/build/CMakeFiles/edit_cache.dir
+/home/peter/project/samples/Stereo-Webcam-Depth-Detection/source_code/openCVProject/UseFaceDetection/build/CMakeFiles/facedetection_test.dir
+/home/peter/project/samples/Stereo-Webcam-Depth-Detection/source_code/openCVProject/UseFaceDetection/build/CMakeFiles/rebuild_cache.dir
+/home/peter/project/samples/Stereo-Webcam-Depth-Detection/source_code/openCVProject/UseFaceDetection/build/CMakeFiles/facedetection_camera.dir
