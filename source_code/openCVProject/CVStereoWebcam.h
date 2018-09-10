@@ -7,8 +7,6 @@
 #ifndef CVSTEREOWEBCAM_H
 #define CVSTEREOWEBCAM_H
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 #include "CVStereoCorrespondance.h"
 #include "globaldata.h"
 

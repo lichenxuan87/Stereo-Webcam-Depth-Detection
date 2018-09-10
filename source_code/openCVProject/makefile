@@ -6,13 +6,13 @@ TARGET = CVStereoDepth
 TARGET_SRC = CVStereoCalibration.cpp \
 			 CVStereoCorrespondance.cpp \
 			 CVStereoDepth.cpp \
-			 CVStereoWebcam.cpp \
 			 globaldata.cpp \
+			 CVStereoWebcam.cpp \
 			 stdafx.cpp \
 			 stereo_calibrate.cpp \
 			 UseFaceDetection/facedetection_camera.cpp
 
-INC = -isystem/usr/include \
+INC = -isystem/usr/local/include \
       -IUseFaceDetection/include \
       -IUseFaceDetection \
 	  -I.
@@ -20,10 +20,10 @@ INC = -isystem/usr/include \
 
 CFLAGS +=  $(INC) -Wall -g
 CXXFLAGS += $(CFLAGS) -std=c++14
-LDFLAGS = -L/usr/lib/x86_64-linux-gnu -L/usr/lib -LUseFaceDetection/lib \
+LDFLAGS = -L/usr/local/lib -L/usr/lib -LUseFaceDetection/lib \
 			-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_calib3d \
-			-lopencv_legacy -lopencv_features2d -lrt -pthread -lseeta_facedet_lib \
-			-Wl,-rpath-link,/usr/lib,-rpath-link,/usr/lib/x86_64-linux-gnu
+            -lopencv_features2d -lopencv_imgcodecs -lopencv_videoio -lrt -pthread -lseeta_facedet_lib \
+			-Wl,-rpath-link,/usr/lib,-rpath-link,/usr/local/lib
 
 TARGET_OBJ = $(patsubst %.cpp,build/%.o,$(TARGET_SRC))
 

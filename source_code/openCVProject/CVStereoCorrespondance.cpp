@@ -11,19 +11,35 @@
 //Module Data
 namespace module_data{
 //*------------------ Slider Parameters ------------*/ 
-    int nStereoSADWindowSize        =  1; //11
-    int nStereoNumDisparities       =  7; //112
-	int nStereoPreFilterType		= CV_STEREO_BM_NORMALIZED_RESPONSE;
-	int nStereoPreFilterSize		=  0; //(x+5)*2.4
-	int nStereoPreFilterCap			= 98; // 61
-	int nStereoMinDisparity			= 180; // x-200
-	int nStereoTextureThreshold		=  150; // x+1
+    // For BM its value is 13
+    // For SGBM its value is 22
+    int nStereoSADWindowSize        =  13;
+    int nStereoNumDisparities       =  8; //128
+	int nStereoPreFilterCap			=  62; // x+1
+	int nStereoMinDisparity			=  131; // x-200
 	int nStereoUniquenessRatio		=  5;
+
+	// For BM its value is 2
+	// For SGBM its value is 50
 	int nStereoSpeckleWindowSize	=  2;
+
+	// For BM its value is 8
+	// For SGBM its value is 2
 	int nStereoSpeckleRange			=  8;
-	int nStereoTrySmallerWindows	=  0;
+
+	// For BM its value is 1
+	// For SGBG its value -1
 	int nStereoDisp12MaxDiff        =  1;
 	int nWindnowMemory				=  1;
+
+	// For BM only
+    int nStereoPreFilterType        =  CV_STEREO_BM_NORMALIZED_RESPONSE;
+    int nStereoPreFilterSize        =  0; //(x+5)
+    int nStereoTextureThreshold     =  507; // x+1
+
+    // For SGBM only
+    int nStereoP1                   =  0;
+    int nStereoP2                   =  0;
 }
 
 
@@ -50,67 +66,118 @@ using namespace cv;
 //Interupt for the block mathing correspondance paramter sliders.
 void sliderHandler(void)
 {
-	//Pre Filter Type
-	if(module_data::nStereoPreFilterType==0)		global_data::BMState.state->preFilterType	   = CV_STEREO_BM_NORMALIZED_RESPONSE;
-	else if(module_data::nStereoPreFilterType==1)	global_data::BMState.state->preFilterType    = CV_STEREO_BM_XSOBEL;
+    if (global_data::isUseBM) {
+        if (global_data::stereoBM == NULL) {
+            global_data::stereoBM = cv::StereoBM::create(112, 9);
+        }
 
-	//Pre Filter Size 5-255 (odd)
-	global_data::BMState.state->preFilterSize = (module_data::nStereoPreFilterSize+5)*2.4;
-	if( global_data::BMState.state->preFilterSize % 2 == 0 )  global_data::BMState.state->preFilterSize++;
+        //Pre Filter Type
+        if(module_data::nStereoPreFilterType==0)        global_data::stereoBM->setPreFilterType(CV_STEREO_BM_NORMALIZED_RESPONSE);
+        else if(module_data::nStereoPreFilterType==1)   global_data::stereoBM->setPreFilterType(CV_STEREO_BM_XSOBEL);
 
-	//Pre Filter Cap 1-63
-	global_data::BMState.state->preFilterCap = (module_data::nStereoPreFilterCap+1)*0.63;
-	if( global_data::BMState.state->preFilterCap == 0 )
-	    global_data::BMState.state->preFilterCap++;
-		
-	//SAD Windnow Size 
-	global_data::BMState.state->SADWindowSize=(module_data::nStereoSADWindowSize+5)*2.0;
-	if( global_data::BMState.state->SADWindowSize % 2 == 0 ) global_data::BMState.state->SADWindowSize++;
-	if( global_data::BMState.state->SADWindowSize >= MIN(global_data::camStreamSize.width, global_data::camStreamSize.height) )
-	    global_data::BMState.state->SADWindowSize = MIN(global_data::camStreamSize.width, global_data::camStreamSize.height);
+        // Pre Filter Size 5-255 (odd)
+        global_data::stereoBM->setPreFilterSize(module_data::nStereoPreFilterSize+5);
 
-	//Min Disparity -200 to 200
-	global_data::BMState.state->minDisparity=(module_data::nStereoMinDisparity-200);
+        //Pre Filter Cap 1-63
+        global_data::stereoBM->setPreFilterCap(module_data::nStereoPreFilterCap+1);
 
-	//Number of Disparity 0 to 150
-	global_data::BMState.state->numberOfDisparities=(module_data::nStereoNumDisparities+1)*16;
+        //SAD Windnow Size
+        if ((module_data::nStereoSADWindowSize % 2) == 0)
+            global_data::stereoBM->setBlockSize(module_data::nStereoSADWindowSize+1);
+        else
+            global_data::stereoBM->setBlockSize(module_data::nStereoSADWindowSize);
 
-	//Texture Threshold 1-500
-	global_data::BMState.state->textureThreshold=(module_data::nStereoTextureThreshold+1);
 
-	//Uniqueness Ratio
-	global_data::BMState.state->uniquenessRatio=module_data::nStereoUniquenessRatio;
+        //Min Disparity -200 to 200
+        global_data::stereoBM->setMinDisparity(module_data::nStereoMinDisparity-200);
 
-		
-	//Speckle Widnows Size 0-50
-	global_data::BMState.state->speckleWindowSize = module_data::nStereoSpeckleWindowSize;
+        //Number of Disparity 0 to 150
+        global_data::stereoBM->setNumDisparities((module_data::nStereoNumDisparities+1)*16);
 
-	// Speckle Range 0-100
-	global_data::BMState.state->speckleRange = module_data::nStereoSpeckleRange;
+        //Texture Threshold 1-500
+        global_data::stereoBM->setTextureThreshold(module_data::nStereoTextureThreshold+1);
 
-	// disp12MaxDiff 0-1
-    global_data::BMState.state->disp12MaxDiff = module_data::nStereoDisp12MaxDiff;
+        //Uniqueness Ratio
+        global_data::stereoBM->setUniquenessRatio(module_data::nStereoUniquenessRatio);
 
-	//Try Smaller Windows 0-1
-	global_data::BMState.state->trySmallerWindows=module_data::nStereoTrySmallerWindows;
+
+        //Speckle Widnows Size 0-100
+        global_data::stereoBM->setSpeckleWindowSize(module_data::nStereoSpeckleWindowSize);
+
+        // Speckle Range 0-100
+        global_data::stereoBM->setSpeckleRange(module_data::nStereoSpeckleRange);
+
+        // disp12MaxDiff 0-1
+        global_data::stereoBM->setDisp12MaxDiff(module_data::nStereoDisp12MaxDiff);
+
+    } else {
+        if (global_data::stereoSGBM == NULL) {
+            global_data::stereoSGBM = cv::StereoSGBM::create(
+                -39, 128, 3, 0, 0, 1, 63, 15, 100, 32, cv::StereoSGBM::MODE_HH);
+        }
+
+        // Set P1
+        global_data::stereoSGBM->setP1(module_data::nStereoP1);
+
+        // Set P2
+        global_data::stereoSGBM->setP2(module_data::nStereoP2);
+
+        //Pre Filter Cap 1-63
+        global_data::stereoSGBM->setPreFilterCap((module_data::nStereoPreFilterCap+1)*0.63);
+
+        //SAD Windnow Size
+        if ((module_data::nStereoSADWindowSize % 2) == 0)
+            global_data::stereoSGBM->setBlockSize(module_data::nStereoSADWindowSize+1);
+        else
+            global_data::stereoSGBM->setBlockSize(module_data::nStereoSADWindowSize);
+
+
+        //Min Disparity -200 to 200
+        global_data::stereoSGBM->setMinDisparity(module_data::nStereoMinDisparity-200);
+
+        //Number of Disparity 0 to 150
+        global_data::stereoSGBM->setNumDisparities((module_data::nStereoNumDisparities+1)*16);
+
+        //Uniqueness Ratio
+        global_data::stereoSGBM->setUniquenessRatio(module_data::nStereoUniquenessRatio);
+
+        //Speckle Windows Size 0-100
+        global_data::stereoSGBM->setSpeckleWindowSize(module_data::nStereoSpeckleWindowSize);
+
+        // Speckle Range 0-100
+        global_data::stereoSGBM->setSpeckleRange(module_data::nStereoSpeckleRange);
+
+        // disp12MaxDiff 0-1
+        global_data::stereoSGBM->setDisp12MaxDiff(module_data::nStereoDisp12MaxDiff);
+    }
+
+
 }
 
 
 //Initilise the slider bars.
 void init_sliderHandler(void){
 	cvNamedWindow( PARAM_WIND, CV_GUI_EXPANDED);
-	cvCreateTrackbar("PF-Typ"		, PARAM_WIND,&module_data::nStereoPreFilterType		, 1,   (CvTrackbarCallback)sliderHandler);
-	cvCreateTrackbar("PF-Size"		, PARAM_WIND,&module_data::nStereoPreFilterSize		, 100, (CvTrackbarCallback)sliderHandler);
+
+	if (global_data::isUseBM) {
+        cvCreateTrackbar("PF-Typ"		, PARAM_WIND,&module_data::nStereoPreFilterType		, 1,   (CvTrackbarCallback)sliderHandler);
+        cvCreateTrackbar("PF-Size"		, PARAM_WIND,&module_data::nStereoPreFilterSize		, 250, (CvTrackbarCallback)sliderHandler);
+        cvCreateTrackbar("TxtreThrsh"   , PARAM_WIND,&module_data::nStereoTextureThreshold  , 500, (CvTrackbarCallback)sliderHandler);
+	} else {
+	    cvCreateTrackbar("P1"           , PARAM_WIND,&module_data::nStereoP1                , 500, (CvTrackbarCallback)sliderHandler);
+        cvCreateTrackbar("P2"           , PARAM_WIND,&module_data::nStereoP2                , 1000, (CvTrackbarCallback)sliderHandler);
+	}
+
+
 	cvCreateTrackbar("PF-Cap"		, PARAM_WIND,&module_data::nStereoPreFilterCap		, 100, (CvTrackbarCallback)sliderHandler);
 	cvCreateTrackbar("SADWinSiz"	, PARAM_WIND,&module_data::nStereoSADWindowSize		, 100, (CvTrackbarCallback)sliderHandler);
 	cvCreateTrackbar("Min Dspty"	, PARAM_WIND,&module_data::nStereoMinDisparity		, 400, (CvTrackbarCallback)sliderHandler);
 	cvCreateTrackbar("# Disprty"	, PARAM_WIND,&module_data::nStereoNumDisparities	, 20,  (CvTrackbarCallback)sliderHandler);
-	cvCreateTrackbar("TxtreThrsh"	, PARAM_WIND,&module_data::nStereoTextureThreshold	, 500, (CvTrackbarCallback)sliderHandler);
 	cvCreateTrackbar("UniqRtio"		, PARAM_WIND,&module_data::nStereoUniquenessRatio	, 100, (CvTrackbarCallback)sliderHandler);
-	cvCreateTrackbar("SpcWindSiz"	, PARAM_WIND,&module_data::nStereoSpeckleWindowSize	, 50, (CvTrackbarCallback)sliderHandler);
+	cvCreateTrackbar("SpcWindSiz"	, PARAM_WIND,&module_data::nStereoSpeckleWindowSize	, 100, (CvTrackbarCallback)sliderHandler);
 	cvCreateTrackbar("Spk Rnge"		, PARAM_WIND,&module_data::nStereoSpeckleRange		, 100, (CvTrackbarCallback)sliderHandler);
-	cvCreateTrackbar("Ty Sml Win"	, PARAM_WIND,&module_data::nStereoTrySmallerWindows	, 1  , (CvTrackbarCallback)sliderHandler);
-	cvCreateTrackbar("Memory"	, PARAM_WIND,&module_data::nWindnowMemory		    , 1  , (CvTrackbarCallback)sliderHandler);
+	cvCreateTrackbar("Memory"	    , PARAM_WIND,&module_data::nWindnowMemory		    , 1  , (CvTrackbarCallback)sliderHandler);
+
 	sliderHandler();
 }
 
@@ -141,7 +208,11 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
     cvtColor(image_right_undistorted,correspondance_data::grey_right_r, CV_RGB2GRAY);
 
     //Calcualte the disparity map.
-    global_data::BMState(correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left);
+    if (global_data::isUseBM) {
+        global_data::stereoBM->compute(correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left);
+    } else {
+        global_data::stereoSGBM->compute(image_left_undistorted, image_right_undistorted, correspondance_data::disp_left);
+    }
     //cvFindStereoCorrespondenceBM( correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left, global_data::BMState);
 
     correspondance_data::disp_left.convertTo(correspondance_data::disp_left, -1, 1.0/16, 0);
@@ -185,7 +256,7 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
 
     //Reporject the image to 3D using calibration matrix Q.
     //cvReprojectImageTo3D(correspondance_data::disp_left_memory, correspondance_data::Image3D_left, Q, true);
-    reprojectImageTo3D(correspondance_data::disp_left, correspondance_data::Image3D_left, Q, false);
+    reprojectImageTo3D(correspondance_data::disp_left, correspondance_data::Image3D_left, Q, true);
 }
 
 
@@ -222,7 +293,7 @@ int calculate_correspondance_depth(Point left_point ,Mat& Q){
 
 
 
-void calculate_correspondance_depth_tracking(cv::vector<cv::KeyPoint> keyPoints, Mat& Q){
+void calculate_correspondance_depth_tracking(std::vector<cv::KeyPoint> keyPoints, Mat& Q){
 
     //Calculate Depth From3D Projection Matrix
     cv::Mat New_Image3D_left=correspondance_data::Image3D_left;

@@ -11,7 +11,9 @@
 //Name Space to hold globally shared data.
 namespace global_data{
 	unsigned cameraNum;
-	cv::StereoBM BMState;
+	bool isUseBM;
+	cv::Ptr<cv::StereoSGBM> stereoSGBM;
+	cv::Ptr<cv::StereoBM> stereoBM;
 	cv::Size camStreamSize;
 	cv::Mat image_left;
 	cv::Mat image_right;

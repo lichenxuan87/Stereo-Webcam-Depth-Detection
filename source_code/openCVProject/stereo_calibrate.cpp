@@ -34,11 +34,14 @@
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "globaldata.h"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/contrib/contrib.hpp"
+//#include "opencv2/contrib/contrib.hpp"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+
 using namespace cv;
 
 using namespace std;
@@ -431,8 +434,8 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
             pair = cvCreateMat( imageSize.height*2, imageSize.width, CV_8UC3 );
 
         //Setup for finding stereo corrrespondences
-        CvStereoBMState *BMState = cvCreateStereoBMState();
-        assert(BMState != 0);
+        CvStereoBMState *stereoSGBM = cvCreateStereoBMState();
+        assert(stereoSGBM != 0);
 
 //        BMState->preFilterSize=41;
 //        BMState->preFilterCap=31;
@@ -441,16 +444,16 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
 //        BMState->numberOfDisparities=128;
 //        BMState->textureThreshold=10;
 //        BMState->uniquenessRatio=15;
-        BMState->SADWindowSize = 9;
-        BMState->numberOfDisparities = 112;
-        BMState->preFilterSize = 5;
-        BMState->preFilterCap = 61;
-        BMState->minDisparity = -39;
-        BMState->textureThreshold = 507;
-        BMState->uniquenessRatio = 0;
-        BMState->speckleWindowSize = 0;
-        BMState->speckleRange = 8;
-        BMState->disp12MaxDiff = 1;
+        stereoSGBM->SADWindowSize = 9;
+        stereoSGBM->numberOfDisparities = 112;
+        stereoSGBM->preFilterSize = 5;
+        stereoSGBM->preFilterCap = 61;
+        stereoSGBM->minDisparity = -39;
+        stereoSGBM->textureThreshold = 507;
+        stereoSGBM->uniquenessRatio = 0;
+        stereoSGBM->speckleWindowSize = 0;
+        stereoSGBM->speckleRange = 8;
+        stereoSGBM->disp12MaxDiff = 1;
 
         for( i = 0; i < nframes; i++ )
         { 
@@ -472,7 +475,7 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
                 if( !isVerticalStereo || useUncalibrated != 0 )
                 {
 
-                    cvFindStereoCorrespondenceBM( img1r, img2r, disp, BMState);
+                    cvFindStereoCorrespondenceBM( img1r, img2r, disp, stereoSGBM);
                     cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );
                     cvNamedWindow( "disparity" );
                     cvShowImage( "disparity", vdisp );
@@ -515,7 +518,7 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
             cvReleaseImage( &img1 );
             cvReleaseImage( &img2 );
         }
-        cvReleaseStereoBMState(&BMState);
+        cvReleaseStereoBMState(&stereoSGBM);
 #else
 
         for( i = 0; i < nframes; i++ )
@@ -640,10 +643,10 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
           M1, D1,
           M2, D2,
           imageSize, R, T, E, F,
-          TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 100, 1e-5),
           CALIB_FIX_ASPECT_RATIO +
           CALIB_ZERO_TANGENT_DIST +
-          CALIB_SAME_FOCAL_LENGTH);
+          CALIB_SAME_FOCAL_LENGTH,
+          TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 100, 1e-5));
   cout << "done with RMS error=" << rms << endl;
   cout << "Done! Press any key to step through images, ESC to exit\n\n";
 
@@ -755,18 +758,18 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
       pair.create(imageSize.height * 2, imageSize.width, CV_8UC3);
 
     // Setup for finding stereo corrrespondences
-    //
-    cv::StereoBM stereo;
-    stereo.state->SADWindowSize = 9;
-    stereo.state->numberOfDisparities = 112;
-    stereo.state->preFilterSize = 5;
-    stereo.state->preFilterCap = 61;
-    stereo.state->minDisparity = -39;
-    stereo.state->textureThreshold = 507;
-    stereo.state->uniquenessRatio = 0;
-    stereo.state->speckleWindowSize = 0;
-    stereo.state->speckleRange = 8;
-    stereo.state->disp12MaxDiff = 1;
+
+    if (global_data::isUseBM) {
+        global_data::stereoSGBM = StereoSGBM::create(
+                  -39, 128, 22, 0, 0, 1, 63, 5, 100, 32, cv::StereoSGBM::MODE_HH);
+    } else {
+        global_data::stereoBM = StereoBM::create(112, 9);
+        global_data::stereoBM->setPreFilterSize(5);
+        global_data::stereoBM->setPreFilterCap(61);
+        global_data::stereoBM->setTextureThreshold(507);
+        global_data::stereoBM->setUniquenessRatio(5);
+    }
+
 
     for (i = 0; i < nframes; i++) {
       cv::Mat img1 = cv::imread(imageNames[0][i].c_str(), 0);
@@ -783,7 +786,12 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
         // image, so the epipolar lines in the rectified
         // images are vertical. Stereo correspondence
         // function does not support such a case.
-        stereo(img1r, img2r, disp);
+        if (global_data::isUseBM) {
+            global_data::stereoBM->compute(img1r, img2r, disp);
+        } else {
+            global_data::stereoSGBM->compute(img1r, img2r, disp);
+        }
+
         cv::normalize(disp, vdisp, 0, 256, cv::NORM_MINMAX, CV_8U);
         cv::imshow("disparity", vdisp);
       }
@@ -841,56 +849,56 @@ int Begin_Calibration(const char* imageList,int nx,int ny,int useUncalibrated,fl
     return 0;
 }
 
-void showDisparity(string leftImageName, string rightImageName, bool isUseBM)
-{
-
-
-
-    Mat img1, img2, g1, g2;
-    Mat disp, disp8;
-    img1 = imread(leftImageName);
-    img2 = imread(rightImageName);
-    cvtColor(img1, g1, CV_BGR2GRAY);
-    cvtColor(img2, g2, CV_BGR2GRAY);
-
-    if (isUseBM)
-    {
-        StereoBM sbm;
-        sbm.state->SADWindowSize = 9;
-        sbm.state->numberOfDisparities = 112;
-        sbm.state->preFilterSize = 5;
-        sbm.state->preFilterCap = 61;
-        sbm.state->minDisparity = -39;
-        sbm.state->textureThreshold = 507;
-        sbm.state->uniquenessRatio = 0;
-        sbm.state->speckleWindowSize = 0;
-        sbm.state->speckleRange = 8;
-        sbm.state->disp12MaxDiff = 1;
-        sbm(g1, g2, disp);
-    }
-    else
-    {
-        StereoSGBM sbm;
-        sbm.minDisparity = -39;
-        sbm.numberOfDisparities = 128;
-        sbm.SADWindowSize = 3;
-        sbm.P1 = 216;
-        sbm.P2 = 864;
-        sbm.disp12MaxDiff = 1;
-        sbm.preFilterCap = 63;
-        sbm.uniquenessRatio = 15;
-        sbm.speckleWindowSize = 100;
-        sbm.speckleRange = 32;
-        //sbm.mode = StereoSGBM::MODE_SGBM_HH;
-        sbm(g1, g2, disp);
-    }
-
-
-    normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);
-
-    imshow("left", img1);
-    imshow("right", img2);
-    imshow("disp", disp8);
-
-    waitKey(0);
-}
+//void showDisparity(string leftImageName, string rightImageName, bool isUseBM)
+//{
+//
+//
+//
+//    Mat img1, img2, g1, g2;
+//    Mat disp, disp8;
+//    img1 = imread(leftImageName);
+//    img2 = imread(rightImageName);
+//    cvtColor(img1, g1, CV_BGR2GRAY);
+//    cvtColor(img2, g2, CV_BGR2GRAY);
+//
+//    if (isUseBM)
+//    {
+//        StereoBM sbm;
+//        sbm.state->SADWindowSize = 9;
+//        sbm.state->numberOfDisparities = 112;
+//        sbm.state->preFilterSize = 5;
+//        sbm.state->preFilterCap = 61;
+//        sbm.state->minDisparity = -39;
+//        sbm.state->textureThreshold = 507;
+//        sbm.state->uniquenessRatio = 0;
+//        sbm.state->speckleWindowSize = 0;
+//        sbm.state->speckleRange = 8;
+//        sbm.state->disp12MaxDiff = 1;
+//        sbm(g1, g2, disp);
+//    }
+//    else
+//    {
+//        StereoSGBM sbm;
+//        sbm.minDisparity = -39;
+//        sbm.numberOfDisparities = 128;
+//        sbm.SADWindowSize = 3;
+//        sbm.P1 = 216;
+//        sbm.P2 = 864;
+//        sbm.disp12MaxDiff = 1;
+//        sbm.preFilterCap = 63;
+//        sbm.uniquenessRatio = 15;
+//        sbm.speckleWindowSize = 100;
+//        sbm.speckleRange = 32;
+//        //sbm.mode = StereoSGBM::MODE_SGBM_HH;
+//        sbm(g1, g2, disp);
+//    }
+//
+//
+//    normalize(disp, disp8, 0, 255, CV_MINMAX, CV_8U);
+//
+//    imshow("left", img1);
+//    imshow("right", img2);
+//    imshow("disp", disp8);
+//
+//    waitKey(0);
+//}

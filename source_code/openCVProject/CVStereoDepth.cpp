@@ -4,22 +4,17 @@
 //		 2013
 
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 
 #include <vector>
 #include <iostream>
 #include <string>
 #include <iostream>
 
-#include "opencv/cxmisc.h"
-#include "opencv/cvaux.h"
-
 #include "opencv2/core/core.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "opencv2/contrib/contrib.hpp"
+//#include "opencv2/contrib/contrib.hpp"
 
 #include <algorithm>
 #include <stdio.h>
@@ -84,6 +79,7 @@ namespace args{
 }
 
 using namespace cv;
+using namespace std;
 
 void interpret_args(int argc, const char* argv[]);
 
@@ -127,8 +123,7 @@ int main(int argc, const char* argv[])
 	params.filterByInertia = false;
 	params.minInertiaRatio = (float) 0.01;
 
-	SimpleBlobDetector blobDetector( params );
-	blobDetector.create("SimpleBlob");
+	Ptr<SimpleBlobDetector> blobDetector = SimpleBlobDetector::create( params );
 
 	//Interpret Command Line Argument
     interpret_args(argc, argv);
@@ -150,7 +145,6 @@ int main(int argc, const char* argv[])
 
 	//Create Display Widnows
 	display_create(CAM1|CAM2|DISP|PROJ);
-	
 
 	// Calibration Matrices
 	cv::Mat Q, map11, map12, map21, map22;
@@ -210,7 +204,7 @@ int main(int argc, const char* argv[])
 		correspondance_data::threholded_image = GetThresholdedImage_RED(global_data::image_left_rectified);
 
 		//DETECT BLOB IN THESHOLDED IMAGE
-		blobDetector.detect(  correspondance_data::threholded_image, keyPoints );
+		blobDetector->detect(  correspondance_data::threholded_image, keyPoints );
 	
 		//PALCE POINT AT OBJECT CENTER
 		for (int i=0; i<keyPoints.size(); i++){
@@ -310,6 +304,8 @@ void interpret_args(int argc, const char* argv[]){
 	    args::number_of_frames = atoi(argv[1]);
 	    args::recapture = false;
 	}
+
+   	global_data::isUseBM = true;
 }
 	
 //*------------------ RIGHT CAMERA MOUSE INTERUPTS ------------*/

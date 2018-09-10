@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 //Shared Calibration Data
 namespace calibration_data{
@@ -17,6 +18,7 @@ namespace calibration_data{
 }
 
 using namespace cv;
+using namespace std;
 
 //Fucntion to be called from main.
 void CVStereo_Calibrate(bool recapture,int number_of_frames){
@@ -40,7 +42,7 @@ void CVStereo_Calibrate(bool recapture,int number_of_frames){
 void CVStereo_Recapture(int number_of_frames){
 
 	// Needs To Save A bunch of Stereo images and Corresponding text file, containing image locations
-	bool stillCapturing=TRUE;
+	bool stillCapturing = true;
 	char key=0;
 	int count=0;
 	clock_t time_start=0;
@@ -49,7 +51,7 @@ void CVStereo_Recapture(int number_of_frames){
 	calibration_data::image_list_file = fopen(IMAGE_LIST_DIR, "w");
 	printf("\nPress SPACE to Save Chessboard Capture and ESC to Finish Capturing...\n");
 
-	while(stillCapturing==TRUE){
+	while(stillCapturing){
 		key=cvWaitKey(10);
 	
 		// GET NEXT FRAME
@@ -61,7 +63,7 @@ void CVStereo_Recapture(int number_of_frames){
 
 		// END ONCE ESC KEY PRESSED OR ENOUGH CAPTURED
 		if(key==ESC_KEY){
-			stillCapturing=FALSE;
+			stillCapturing = false;
 			printf("\nEnding Capture Sequence ... Done\n\n");
 		}
 
@@ -88,7 +90,7 @@ void CVStereo_Recapture(int number_of_frames){
 		// MANAUL CAPTURE
 		if(key==SPACE_BAR_KEY ){
 			//CHECK FOR CHESSBOARD
-			if(CVStereo_Capture_Check()==TRUE){
+			if(CVStereo_Capture_Check() == true){
 				CVStereo_Capture();
 			}
 			else{
@@ -147,19 +149,19 @@ bool CVStereo_Capture(void){
 bool CVStereo_Capture_Check(void){
 
 	int found_left=0,found_right=0;
-	int count_chessboard=0;
+	int count_chessboard = 0;
 	vector<cv::Point2f> corners;
 
 	found_left = findChessboardCorners( global_data::image_left, Size(NX, NY),
 	                                        corners,
-											CV_CALIB_CB_ADAPTIVE_THRESH |
-											CV_CALIB_CB_NORMALIZE_IMAGE);
+											cv::CALIB_CB_ADAPTIVE_THRESH |
+											cv::CALIB_CB_NORMALIZE_IMAGE);
 
 	if (global_data::cameraNum == 2) {
 	    found_right = findChessboardCorners( global_data::image_right, Size(NX, NY),
 	                                        corners,
-											CV_CALIB_CB_ADAPTIVE_THRESH |
-											CV_CALIB_CB_NORMALIZE_IMAGE);
+	                                        cv::CALIB_CB_ADAPTIVE_THRESH |
+	                                        cv::CALIB_CB_NORMALIZE_IMAGE);
 	}
 
 	if (global_data::cameraNum == 2) {

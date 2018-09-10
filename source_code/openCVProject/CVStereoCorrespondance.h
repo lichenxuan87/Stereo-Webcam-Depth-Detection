@@ -7,10 +7,10 @@
 #ifndef CVSTEREOCORRESPONDANCE_H
 #define CVSTEREOCORRESPONDANCE_H
 
-#include <opencv/cxcore.h>
 #include "CVStereoWebcam.h"
 #include "globaldata.h"
 #include "stdafx.h"
+#include <vector>
 
 
 void sliderHandler(void);
@@ -23,7 +23,7 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
 
 int calculate_correspondance_depth(cv::Point left_point, cv::Mat& Q);
 
-void calculate_correspondance_depth_tracking(cv::vector<cv::KeyPoint> keyPoints, cv::Mat& Q);
+void calculate_correspondance_depth_tracking(std::vector<cv::KeyPoint> keyPoints, cv::Mat& Q);
 
 double calculate_correspondance_depth_tracking(cv::Rect boundary);
 

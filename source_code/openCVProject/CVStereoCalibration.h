@@ -6,8 +6,6 @@
 #ifndef CVSTEREOCALIBRATION_H
 #define CVSTEREOCALIBRATION_H
 
-#include <opencv/cv.h>
-
 #include "CVStereoWebcam.h"
 #include "globaldata.h"
 #include "stdafx.h"

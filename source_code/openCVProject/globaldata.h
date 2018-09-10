@@ -7,16 +7,16 @@
 #define GLOBALDATA_H
 
 
-#include "opencv/cvaux.h"
-#include <opencv/highgui.h>
-
+#include <opencv2/opencv.hpp>
 
 
 namespace global_data{
 	extern unsigned cameraNum;
-	extern cv::StereoBM BMState;
+	extern bool isUseBM;
+	extern cv::Ptr<cv::StereoSGBM> stereoSGBM;
+	extern cv::Ptr<cv::StereoBM> stereoBM;
 	extern cv::Size camStreamSize;
-	extern CvStereoGCState *GCState;
+	//extern CvStereoGCState *GCState;
 	extern cv::Mat image_left;
     extern cv::Mat image_right;
 	extern cv::Mat image_left_rectified;
