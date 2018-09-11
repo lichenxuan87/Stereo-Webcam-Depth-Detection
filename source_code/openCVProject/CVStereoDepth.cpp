@@ -130,7 +130,6 @@ int main(int argc, const char* argv[])
 
 	//Initiate web cameras
 	webcam_init(0,1);
-    // webcam_init(0);
 
 	//Execute Calibration Sequence
 	if(args::calibrate_procedure == true){
@@ -144,7 +143,11 @@ int main(int argc, const char* argv[])
 	init_sliderHandler();
 
 	//Create Display Widnows
-	display_create(CAM1|CAM2|DISP|PROJ);
+    #if CALIB_DEBUG
+	    display_create(CAM1|CAM2|DISP|PROJ);
+    #else
+	    display_create(CAM1);
+    #endif
 
 	// Calibration Matrices
 	cv::Mat Q, map11, map12, map21, map22;
@@ -156,11 +159,6 @@ int main(int argc, const char* argv[])
 	fs["map21"] >> map21;
 	fs["map22"] >> map22;
 
-//	main_variables::Q = (CvMat *)cvLoad("CalibrationData/Q.xml",NULL,NULL,NULL);
-//	main_variables::mx1 = (CvMat *)cvLoad("CalibrationData/mx1.xml",NULL,NULL,NULL);
-//	main_variables::my1 = (CvMat *)cvLoad("CalibrationData/my1.xml",NULL,NULL,NULL);
-//	main_variables::mx2 = (CvMat *)cvLoad("CalibrationData/mx2.xml",NULL,NULL,NULL);
-//	main_variables::my2 = (CvMat *)cvLoad("CalibrationData/my2.xml",NULL,NULL,NULL);
 	printf(" Done\n");
 
 	//PRINT INSTRUCTIONS//ADD TO DESCIRPTION
@@ -262,8 +260,11 @@ int main(int argc, const char* argv[])
         #endif
 
 		// UPDATE DISPLAY
+#if CALIB_DEBUG
 		display_update(CAM1|CAM2|DISP|PROJ|RAW_DISP|PARAM);
-
+#else
+		display_update(CAM1);
+#endif
 
 		//*------------------ CALC 3D POSITION UPON SPACE BAR PRESS  -----------------------------------------------------------------------*/
 		

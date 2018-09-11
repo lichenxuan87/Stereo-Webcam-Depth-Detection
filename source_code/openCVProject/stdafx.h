@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 
+#define CALIB_DEBUG                     0
 
 #define RECALIBRATION					1
 #define RECAPTURE						0

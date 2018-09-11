@@ -118,8 +118,13 @@ void sliderHandler(void)
 
     } else {
         if (global_data::stereoSGBM == NULL) {
+#if CALIB_DEBUG
             global_data::stereoSGBM = cv::StereoSGBM::create(
                 -39, 128, 11, 0, 0, 1, 63, 15, 100, 32, cv::StereoSGBM::MODE_HH);
+#else
+            global_data::stereoSGBM = cv::StereoSGBM::create(
+                -39, 128, 11, 0, 0, 1, 63, 15, 100, 32, cv::StereoSGBM::MODE_SGBM_3WAY);
+#endif
         }
 
         // Set P1
@@ -190,19 +195,6 @@ void init_sliderHandler(void){
 //Initilise the local data.
 void init_correspondance_data(void){
 
-//	 	correspondance_data::disp_left				= cv::create( global_data::camStreamSize.height,global_data::camStreamSize.width, CV_16S );
-//		correspondance_data::vdisp_left				= cv::create(global_data::camStreamSize.height,global_data::camStreamSize.width, CV_8U );
-//		correspondance_data::smoothedvdisp_left		= cv::create(global_data::camStreamSize.height,global_data::camStreamSize.width, CV_8U );
-//		correspondance_data::Image3D_left			= cv::create(global_data::camStreamSize.height, global_data::camStreamSize.width, CV_32FC3);
-//		correspondance_data::grey_left_r			= cvCreateImage(global_data::camStreamSize,IPL_DEPTH_8U,1);
-//		correspondance_data::grey_right_r			= cvCreateImage(global_data::camStreamSize,IPL_DEPTH_8U,1);
-//	 	correspondance_data::disp_right				= cv::create( global_data::camStreamSize.height,global_data::camStreamSize.width, CV_16S );
-//		correspondance_data::vdisp_right			= cv::create(global_data::camStreamSize.height,global_data::camStreamSize.width, CV_8U );
-//		correspondance_data::smoothedvdisp_right	= cv::create(global_data::camStreamSize.height,global_data::camStreamSize.width, CV_8U );
-//		correspondance_data::Image3D_right			= cv::create(global_data::camStreamSize.height, global_data::camStreamSize.width, CV_32FC3);
-//		correspondance_data::threholded_image       = cvCreateImage(global_data::camStreamSize,IPL_DEPTH_8U,1);
-//		correspondance_data::disp_left_memory       = cv::create(global_data::camStreamSize.height,global_data::camStreamSize.width, CV_16S );
-//		correspondance_data::vdisp_left_memory      = cv::create(global_data::camStreamSize.height,global_data::camStreamSize.width, CV_8U );
 }
 
 
@@ -219,11 +211,8 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
     } else {
         global_data::stereoSGBM->compute(correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left);
     }
-    //cvFindStereoCorrespondenceBM( correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left, global_data::BMState);
 
     correspondance_data::disp_left.convertTo(correspondance_data::disp_left, -1, 1.0/16, 0);
-    //cvConvertScale(correspondance_data::disp_left, correspondance_data::disp_left, 1.0/16, 0 );
-    //cvConvertScale(correspondance_data::disp_left, correspondance_data::disp_left, -16, 0 );
 
     //Implement Memory Image from correspondance
     //TODO: not use memory map
@@ -258,7 +247,10 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
 
     //Normalise the images for display
     //normalize( correspondance_data::disp_left_memory, correspondance_data::vdisp_left_memory, 0, 256, NORM_MINMAX, CV_8U );
+
+#if CALIB_DEBUG
     normalize( correspondance_data::disp_left, correspondance_data::vdisp_left, 0, 256, NORM_MINMAX, CV_8U );
+#endif
 
     //Reporject the image to 3D using calibration matrix Q.
     //cvReprojectImageTo3D(correspondance_data::disp_left_memory, correspondance_data::Image3D_left, Q, true);
