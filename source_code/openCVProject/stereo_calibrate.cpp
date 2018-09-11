@@ -608,8 +608,8 @@ void StereoCalib(const char* imageList, int nx, int ny, int useUncalibrated, flo
               cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE);
 
       if (found[lr] || s == maxScale) {
-        //cornerSubPix(timg, corners[lr], Size(11, 11), Size(-1,-1),
-        //                                TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 100, 1e-5));
+//        cornerSubPix(timg, corners[lr], Size(11, 11), Size(-1,-1),
+//                                        TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 100, 1e-5));
         cv::Mat mcorners(corners[lr]);
         mcorners *= (1. / s);
       }

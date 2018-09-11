@@ -14,7 +14,9 @@ namespace module_data{
     // For BM its value is 13
     // For SGBM its value is 3
     int nStereoSADWindowSize        =  11; // BM:x+5; SGBM:x+1
-    int nStereoNumDisparities       =  7; // (x+1)*16
+
+    // Increase num of disparity for nearer distance detection
+    int nStereoNumDisparities       =  10; // (x+1)*16
 	int nStereoPreFilterCap			=  62; // x+1
 	int nStereoMinDisparity			=  180; // x-200
 	int nStereoUniquenessRatio		=  5;
