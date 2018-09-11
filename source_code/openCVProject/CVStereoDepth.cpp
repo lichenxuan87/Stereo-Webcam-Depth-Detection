@@ -220,18 +220,28 @@ int main(int argc, const char* argv[])
 		
         #if FACE_DETECTION
 		vector<Rect> faceBoundaries = detectFaceLocation(correspondance_data::grey_left_r);
+
+//		if (faceBoundaries.size() > 0) {
+//            cv::rectangle(global_data::image_left_rectified, faceBoundaries[0], CV_RGB(250, 230, 215), 4, 8, 0);
 //
-//		for (int i=0; i<faceBoundaries.size(); i++){
-//		    keyPoints.push_back(KeyPoint((faceBoundaries[i].x + faceBoundaries[i].width)/2,
-//                                          (faceBoundaries[i].y + faceBoundaries[i].height)/2, 1));
 //
-//		    cv::rectangle(global_data::image_left_rectified, faceBoundaries[i], CV_RGB(250, 230, 215), 4, 8, 0);
-//        }
+//            static int x_center = 0;
+//            static int y_center = 0;
+//            int new_x_center = (faceBoundaries[0].x + faceBoundaries[0].width)/2;
+//            int new_y_center = (faceBoundaries[0].y + faceBoundaries[0].height)/2;
 //
-//		//CALCULATE DEPTH OBJECT DEPTH FROM DISPARITY MAP
-//        calculate_correspondance_depth_tracking(keyPoints, main_variables::Q);
+//            if ((new_x_center - x_center) * (new_x_center - x_center) + (new_y_center - y_center) * (new_y_center - y_center) >= 25)
+//            {
+//                x_center = new_x_center;
+//                y_center = new_y_center;
+//            }
 //
-//        keyPoints.clear();
+//            keyPoints.push_back(KeyPoint(x_center, y_center, 1));
+//
+//            calculate_correspondance_depth_tracking(keyPoints, main_variables::Q);
+//
+//            keyPoints.clear();
+//		}
 
 		char image_text[50];
 		int x_center = 0;
@@ -305,7 +315,7 @@ void interpret_args(int argc, const char* argv[]){
 	    args::recapture = false;
 	}
 
-   	global_data::isUseBM = true;
+   	global_data::isUseBM = false;
 }
 	
 //*------------------ RIGHT CAMERA MOUSE INTERUPTS ------------*/

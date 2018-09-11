@@ -12,19 +12,19 @@
 namespace module_data{
 //*------------------ Slider Parameters ------------*/ 
     // For BM its value is 13
-    // For SGBM its value is 22
-    int nStereoSADWindowSize        =  13;
-    int nStereoNumDisparities       =  8; //128
+    // For SGBM its value is 3
+    int nStereoSADWindowSize        =  11; // BM:x+5; SGBM:x+1
+    int nStereoNumDisparities       =  7; // (x+1)*16
 	int nStereoPreFilterCap			=  62; // x+1
-	int nStereoMinDisparity			=  131; // x-200
+	int nStereoMinDisparity			=  180; // x-200
 	int nStereoUniquenessRatio		=  5;
 
 	// For BM its value is 2
-	// For SGBM its value is 50
+	// For SGBM its value is 2
 	int nStereoSpeckleWindowSize	=  2;
 
 	// For BM its value is 8
-	// For SGBM its value is 2
+	// For SGBM its value is 8
 	int nStereoSpeckleRange			=  8;
 
 	// For BM its value is 1
@@ -34,8 +34,8 @@ namespace module_data{
 
 	// For BM only
     int nStereoPreFilterType        =  CV_STEREO_BM_NORMALIZED_RESPONSE;
-    int nStereoPreFilterSize        =  0; //(x+5)
-    int nStereoTextureThreshold     =  507; // x+1
+    int nStereoPreFilterSize        =  7; //(x+5)
+    int nStereoTextureThreshold     =  150; // x+1
 
     // For SGBM only
     int nStereoP1                   =  0;
@@ -76,16 +76,20 @@ void sliderHandler(void)
         else if(module_data::nStereoPreFilterType==1)   global_data::stereoBM->setPreFilterType(CV_STEREO_BM_XSOBEL);
 
         // Pre Filter Size 5-255 (odd)
-        global_data::stereoBM->setPreFilterSize(module_data::nStereoPreFilterSize+5);
+        if( module_data::nStereoPreFilterSize % 2 == 0 )
+            global_data::stereoBM->setPreFilterSize(module_data::nStereoPreFilterSize + 5);
+        else
+            global_data::stereoBM->setPreFilterSize(module_data::nStereoPreFilterSize + 6);
+
 
         //Pre Filter Cap 1-63
         global_data::stereoBM->setPreFilterCap(module_data::nStereoPreFilterCap+1);
 
         //SAD Windnow Size
         if ((module_data::nStereoSADWindowSize % 2) == 0)
-            global_data::stereoBM->setBlockSize(module_data::nStereoSADWindowSize+1);
+            global_data::stereoBM->setBlockSize(module_data::nStereoSADWindowSize+5);
         else
-            global_data::stereoBM->setBlockSize(module_data::nStereoSADWindowSize);
+            global_data::stereoBM->setBlockSize(module_data::nStereoSADWindowSize+6);
 
 
         //Min Disparity -200 to 200
@@ -113,7 +117,7 @@ void sliderHandler(void)
     } else {
         if (global_data::stereoSGBM == NULL) {
             global_data::stereoSGBM = cv::StereoSGBM::create(
-                -39, 128, 3, 0, 0, 1, 63, 15, 100, 32, cv::StereoSGBM::MODE_HH);
+                -39, 128, 11, 0, 0, 1, 63, 15, 100, 32, cv::StereoSGBM::MODE_HH);
         }
 
         // Set P1
@@ -211,7 +215,7 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
     if (global_data::isUseBM) {
         global_data::stereoBM->compute(correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left);
     } else {
-        global_data::stereoSGBM->compute(image_left_undistorted, image_right_undistorted, correspondance_data::disp_left);
+        global_data::stereoSGBM->compute(correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left);
     }
     //cvFindStereoCorrespondenceBM( correspondance_data::grey_left_r, correspondance_data::grey_right_r, correspondance_data::disp_left, global_data::BMState);
 
@@ -256,7 +260,7 @@ void calculate_correspondance_data(cv::Mat& image_left_undistorted, cv::Mat& ima
 
     //Reporject the image to 3D using calibration matrix Q.
     //cvReprojectImageTo3D(correspondance_data::disp_left_memory, correspondance_data::Image3D_left, Q, true);
-    reprojectImageTo3D(correspondance_data::disp_left, correspondance_data::Image3D_left, Q, true);
+    reprojectImageTo3D(correspondance_data::disp_left, correspondance_data::Image3D_left, Q, false);
 }
 
 

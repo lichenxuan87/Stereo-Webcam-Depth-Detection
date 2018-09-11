@@ -14,7 +14,7 @@
 #define AUTO_CAPTURE					0
 #define NUMBER_TO_CAPTURE				5
 
-#define DISPLAY_CORNERS					0
+#define DISPLAY_CORNERS					1
 #define USE_UNDISTORTED					1
 #define DISPLAY_DISARITY_AND_RECTIFED	1
 #define USE_UNCALIBRATED				0   // Hartley method
