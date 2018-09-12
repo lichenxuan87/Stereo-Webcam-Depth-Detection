@@ -6,7 +6,7 @@
 #include "CVStereoCorrespondance.h"
 
 #include "stdafx.h"
-
+#include <cmath>
 
 //Module Data
 namespace module_data{
@@ -312,31 +312,40 @@ void calculate_correspondance_depth_tracking(std::vector<cv::KeyPoint> keyPoints
 }
 
 
-double calculate_correspondance_depth_tracking(cv::Rect boundary)
+cv::Vec4f calculate_correspondance_depth_tracking(cv::Rect boundary)
 {
-    cv::Mat New_Image3D_left=correspondance_data::Image3D_left;
+    cv::Mat New_Image3D_left = correspondance_data::Image3D_left;
 
     //char image_text[50];
 
     //Overlay text onto image displaying depth data.
-    double averageDepth = 0;
+    cv::Vec4f averageCoodinate(0, 0, 0, 0);
     int validNumber = 0;
     for(int x = boundary.x + boundary.width/4; x < boundary.x + 3*boundary.width/4; x++){
         for (int y = boundary.y + boundary.height/4; y < boundary.y + 3*boundary.height/4; y++) {
-            cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(x, y);
+            cv::Vec3f Depth_from_proj =  New_Image3D_left.at<cv::Vec3f>(y, x);
 
             if (Depth_from_proj[2] > 0 && Depth_from_proj[2] < 1000) {
-                averageDepth += Depth_from_proj[2];
+                averageCoodinate[0] += Depth_from_proj[0];
+                averageCoodinate[1] += Depth_from_proj[1];
+                averageCoodinate[2] += Depth_from_proj[2];
 
                 validNumber++;
             }
         }
     }
 
-    if (validNumber != 0)
-        averageDepth /= validNumber;
+    if (validNumber != 0) {
+        averageCoodinate /= validNumber;
 
-    return averageDepth;
+        // z = sqrt(d^2 - x^2 - y^2)
+        averageCoodinate[3] = sqrt(pow(averageCoodinate[2], 2)
+                - pow(averageCoodinate[1], 2)
+                - pow(averageCoodinate[0], 2));
+    }
+
+
+    return averageCoodinate;
 }
 
 

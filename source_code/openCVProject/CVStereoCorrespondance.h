@@ -25,7 +25,7 @@ int calculate_correspondance_depth(cv::Point left_point, cv::Mat& Q);
 
 void calculate_correspondance_depth_tracking(std::vector<cv::KeyPoint> keyPoints, cv::Mat& Q);
 
-double calculate_correspondance_depth_tracking(cv::Rect boundary);
+cv::Vec4f calculate_correspondance_depth_tracking(cv::Rect boundary);
 
 cv::Mat GetThresholdedImage_RED(cv::Mat& frame);
 

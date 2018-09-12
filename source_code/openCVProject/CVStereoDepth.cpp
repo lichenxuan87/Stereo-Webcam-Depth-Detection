@@ -24,6 +24,7 @@
 #include "CVStereoCorrespondance.h"
 #include "globaldata.h"
 #include "stdafx.h"
+#include <time.h>
 
 #include "facedetection_camera.h"
 
@@ -91,6 +92,8 @@ void right_image_mouseHandler(int event, int x, int y, int flags, void* param);
 void disp_image_mouseHandler(int event, int x, int y, int flags, void* param);
 
 void manual_depth_calc(void);
+
+void run_face_detection();
 
 int main(int argc, const char* argv[])
 {
@@ -169,6 +172,10 @@ int main(int argc, const char* argv[])
 	cvSetMouseCallback("WEBCAM TWO (RIGHT)",right_image_mouseHandler,0);
 	cvSetMouseCallback("DISPARITY",disp_image_mouseHandler,0);
 
+	vector<Rect> faceBoundaries;
+	timespec lastKernelTp = {0};
+	clock_gettime(CLOCK_MONOTONIC_RAW, &lastKernelTp); // Kernel time
+
 	while (key != ESC_KEY){
 		key=cvWaitKey(10);
 
@@ -217,7 +224,14 @@ int main(int argc, const char* argv[])
 		#endif
 		
         #if FACE_DETECTION
-		vector<Rect> faceBoundaries = detectFaceLocation(correspondance_data::grey_left_r);
+		timespec curKernelTp = {0};
+		clock_gettime(CLOCK_MONOTONIC_RAW, &curKernelTp);
+
+		// If time has elapsed 100ms
+		if (((curKernelTp.tv_sec - lastKernelTp.tv_sec) * 1000
+		        + (curKernelTp.tv_nsec - lastKernelTp.tv_nsec)/1000) > 100) {
+		    faceBoundaries = detectFaceLocation(correspondance_data::grey_left_r);
+		}
 
 //		if (faceBoundaries.size() > 0) {
 //            cv::rectangle(global_data::image_left_rectified, faceBoundaries[0], CV_RGB(250, 230, 215), 4, 8, 0);
@@ -249,13 +263,13 @@ int main(int argc, const char* argv[])
 		    x_center = (faceBoundaries[i].x + faceBoundaries[i].width)/2;
 		    y_center = (faceBoundaries[i].y + faceBoundaries[i].height)/2;
 
-		    double averageDepth = calculate_correspondance_depth_tracking(faceBoundaries[i]);
+		    Vec4f averageCoodinate = calculate_correspondance_depth_tracking(faceBoundaries[i]);
 
-		    if (averageDepth > 0) {
-		        sprintf(image_text,".   %1.2f", averageDepth);
-		        putText(global_data::image_left_rectified, image_text , Point(x_center, y_center), CV_FONT_HERSHEY_COMPLEX_SMALL, 2, Scalar(50,100,250));
-		    }
-        }
+            if (averageCoodinate[2] > 0) {
+                sprintf(image_text,"x:%1.2f y:%1.2f z:%1.2f d:%1.2f", averageCoodinate[0], averageCoodinate[1], averageCoodinate[3], averageCoodinate[2]);
+                putText(global_data::image_left_rectified, image_text , Point(x_center, y_center), CV_FONT_HERSHEY_COMPLEX_SMALL, 1, Scalar(50,100,250));
+            }
+		}
 
         #endif
 
