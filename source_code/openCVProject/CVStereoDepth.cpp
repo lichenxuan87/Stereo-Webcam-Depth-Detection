@@ -27,7 +27,7 @@
 #include <time.h>
 
 #include "facedetection_camera.h"
-
+#include "CameraAreaSelector.h"
 
 
 /******* Shared Variables ******/
@@ -93,8 +93,6 @@ void disp_image_mouseHandler(int event, int x, int y, int flags, void* param);
 
 void manual_depth_calc(void);
 
-void run_face_detection();
-
 int main(int argc, const char* argv[])
 {
 	printf("--- Stereo Vision Depth Detector ---\n\n");
@@ -108,6 +106,8 @@ int main(int argc, const char* argv[])
 
 	// BLOB_TRACKING=
 	vector<KeyPoint> keyPoints;
+
+#if BLOB_TRACKING
 	SimpleBlobDetector::Params params;
 
 	params.minDistBetweenBlobs = 100000;
@@ -127,12 +127,16 @@ int main(int argc, const char* argv[])
 	params.minInertiaRatio = (float) 0.01;
 
 	Ptr<SimpleBlobDetector> blobDetector = SimpleBlobDetector::create( params );
+#endif
+
+	CameraAreaSelector areaSelector;
 
 	//Interpret Command Line Argument
     interpret_args(argc, argv);
 
 	//Initiate web cameras
-	webcam_init(0,1);
+	if (!webcam_init(0,1, 2))
+	    exit(-1);
 
 	//Execute Calibration Sequence
 	if(args::calibrate_procedure == true){
@@ -147,9 +151,9 @@ int main(int argc, const char* argv[])
 
 	//Create Display Widnows
     #if CALIB_DEBUG
-	    display_create(CAM1|CAM2|DISP|PROJ);
+	    display_create(CAM1|CAM2|CAM_C|DISP|PROJ);
     #else
-	    display_create(CAM1);
+	    display_create(CAM1|CAM_C);
     #endif
 
 	// Calibration Matrices
@@ -175,6 +179,9 @@ int main(int argc, const char* argv[])
 	vector<Rect> faceBoundaries;
 	timespec lastKernelTp = {0};
 	clock_gettime(CLOCK_MONOTONIC_RAW, &lastKernelTp); // Kernel time
+
+	// Full screen map
+	global_data::fullScreenImage.create(1080, 1920, CV_8UC3);
 
 	while (key != ESC_KEY){
 		key=cvWaitKey(10);
@@ -258,12 +265,13 @@ int main(int argc, const char* argv[])
 		char image_text[50];
 		int x_center = 0;
 		int y_center = 0;
+		Vec4f averageCoodinate;
 		for (int i = 0; i < faceBoundaries.size(); i++) {
 		    cv::rectangle(global_data::image_left_rectified, faceBoundaries[i], CV_RGB(250, 230, 215), 4, 8, 0);
 		    x_center = (faceBoundaries[i].x + faceBoundaries[i].width)/2;
 		    y_center = (faceBoundaries[i].y + faceBoundaries[i].height)/2;
 
-		    Vec4f averageCoodinate = calculate_correspondance_depth_tracking(faceBoundaries[i]);
+		    averageCoodinate = calculate_correspondance_depth_tracking(faceBoundaries[i]);
 
             if (averageCoodinate[2] > 0) {
                 sprintf(image_text,"x:%1.2f y:%1.2f z:%1.2f d:%1.2f", averageCoodinate[0], averageCoodinate[1], averageCoodinate[3], averageCoodinate[2]);
@@ -273,11 +281,18 @@ int main(int argc, const char* argv[])
 
         #endif
 
+		// Construct full screen image
+		Rect displayBoundary = areaSelector.selectAreaByViewerPosition(
+		        Vec3f(averageCoodinate[0], averageCoodinate[1], averageCoodinate[2]));
+		Mat displayArea = global_data::fullScreenImage(displayBoundary);
+        resize(global_data::image_c, displayArea, Size(960,720));
+
+
 		// UPDATE DISPLAY
 #if CALIB_DEBUG
-		display_update(CAM1|CAM2|DISP|PROJ|RAW_DISP|PARAM);
+		display_update(CAM1|CAM2|DISP|PROJ|RAW_DISP|PARAM|CAM_C);
 #else
-		display_update(CAM1);
+		display_update(CAM1|CAM_C);
 #endif
 
 		//*------------------ CALC 3D POSITION UPON SPACE BAR PRESS  -----------------------------------------------------------------------*/

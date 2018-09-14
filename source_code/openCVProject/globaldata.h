@@ -19,8 +19,10 @@ namespace global_data{
 	//extern CvStereoGCState *GCState;
 	extern cv::Mat image_left;
     extern cv::Mat image_right;
+    extern cv::Mat image_c;
 	extern cv::Mat image_left_rectified;
     extern cv::Mat image_right_rectified;
+    extern cv::Mat fullScreenImage;
 }
 
 

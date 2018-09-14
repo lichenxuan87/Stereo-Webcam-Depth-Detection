@@ -17,6 +17,8 @@ namespace global_data{
 	cv::Size camStreamSize;
 	cv::Mat image_left;
 	cv::Mat image_right;
+	cv::Mat image_c;
 	cv::Mat image_left_rectified;
 	cv::Mat image_right_rectified;
+	cv::Mat fullScreenImage;
 }

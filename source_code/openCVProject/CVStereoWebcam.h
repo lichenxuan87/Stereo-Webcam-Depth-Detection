@@ -18,6 +18,7 @@
 #define PROJ   32
 #define RAW_DISP 64
 #define PARAM	128
+#define CAM_C 256
 
 
 #define CAM1_WIND "WEBCAM ONE (LEFT) "
@@ -28,12 +29,11 @@
 #define PROJ_WIND  "RED OBJECT IDETIFIER"
 #define PARAM_WIND  "BM STEREO CORRESPONDANCE PARAMETERS"
 #define RAW_DISPARITY_WIND "RAW DISPARITY"
+#define CAM_C_WIND "Camera C"
 
 #define IMAGE_LIST_DIR "list.txt"
 
-void webcam_init(int cam);
-
-void webcam_init(int cam1,int cam2);
+bool webcam_init(int cam1,int cam2, int cam3);
 
 void webcam_update(void);
 

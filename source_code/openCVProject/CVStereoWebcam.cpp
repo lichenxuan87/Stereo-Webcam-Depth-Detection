@@ -13,31 +13,36 @@
 namespace webcam_data{
     cv::VideoCapture capture_left;
     cv::VideoCapture capture_right;
+    cv::VideoCapture capture_c;
 }
 
 using namespace std;
 using namespace cv;
 
 //Initialises Webcams
-void webcam_init(int cam){
-    cout << "webcam_init(int cam) Not implemented!" <<endl;
-}
+bool webcam_init(int cam1,int cam2, int cam3){
 
-//Initialises Webcams
-void webcam_init(int cam1,int cam2){
 
-	webcam_data::capture_left.open(cam1);
-	webcam_data::capture_right.open(cam2);
+    if (!webcam_data::capture_left.open(cam1) ||
+        !webcam_data::capture_right.open(cam2) ||
+        !webcam_data::capture_c.open(cam3)) {
+        cout <<"Web camera open failed!" << endl;
 
-	global_data::cameraNum = 2;
+        return false;
+    } else {
 
-	webcam_data::capture_left.read(global_data::image_left);
-	webcam_data::capture_right.read(global_data::image_right);
-	webcam_data::capture_left.read(global_data::image_left_rectified);
-	webcam_data::capture_right.read(global_data::image_right_rectified);
+        global_data::cameraNum = 2;
 
-	global_data::camStreamSize = global_data::image_left.size();
+        webcam_data::capture_left.read(global_data::image_left);
+        webcam_data::capture_right.read(global_data::image_right);
+        webcam_data::capture_c.read(global_data::image_c);
+        webcam_data::capture_left.read(global_data::image_left_rectified);
+        webcam_data::capture_right.read(global_data::image_right_rectified);
 
+        global_data::camStreamSize = global_data::image_left.size();
+
+        return true;
+    }
 
 }
 
@@ -48,6 +53,8 @@ void webcam_update(void){
 	if (global_data::cameraNum == 2) {
 	    webcam_data::capture_right.read(global_data::image_right);
 	}
+
+	webcam_data::capture_c.read(global_data::image_c);
 
 	//cvWaitKey(10);
 }
@@ -71,12 +78,20 @@ void display_update(const unsigned int DISP_ID){
 #endif
 	if(DISP_ID&RAW_DISP) imshow( RAW_DISPARITY_WIND,correspondance_data::vdisp_left);
 	if(DISP_ID&PARAM)    imshow( PARAM_WIND,0);
+
+	if(DISP_ID&CAM_C) {
+	    imshow( CAM_C_WIND, global_data::fullScreenImage);
+	}
+
+
 }
 
 //Creates named widnwos for the displays.
 void display_create(const unsigned int DISP_ID){
+	if(DISP_ID&CAM1)     {
+	    cvNamedWindow(CAM1_WIND,0);
+	}
 	
-	if(DISP_ID&CAM1)     cvNamedWindow(CAM1_WIND,0);
 	if(DISP_ID&CAM1_RAW) cvNamedWindow(CAM1_RAW_WIND,0); 
 
 	if (global_data::cameraNum == 2) {
@@ -92,6 +107,12 @@ void display_create(const unsigned int DISP_ID){
 
 	if(DISP_ID&RAW_DISP) cvNamedWindow(RAW_DISPARITY_WIND,0); 
 	if(DISP_ID&PARAM)    cvNamedWindow(PARAM_WIND,0);
+
+	if(DISP_ID&CAM_C)    {
+	    cvNamedWindow(CAM_C_WIND,0);
+	    cvSetWindowProperty(CAM_C_WIND, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+	}
+
 }
 
 
@@ -109,7 +130,9 @@ void display_destroy(const unsigned int DISP_ID){
 	if(DISP_ID&DISP)     cvDestroyWindow(DISP_WIND); 
 	if(DISP_ID&PROJ)     cvDestroyWindow(PROJ_WIND); 
 	if(DISP_ID&RAW_DISP) cvDestroyWindow(RAW_DISPARITY_WIND); 
-	if(DISP_ID&PARAM)    cvNamedWindow(PARAM_WIND); 
+	if(DISP_ID&PARAM)    cvDestroyWindow(PARAM_WIND);
+
+	if(DISP_ID&CAM_C)    cvDestroyWindow(CAM_C_WIND);
 }
 
 //Release the Webcam Object
