@@ -11,7 +11,8 @@ TARGET_SRC = CVStereoCalibration.cpp \
 			 stdafx.cpp \
 			 stereo_calibrate.cpp \
 			 CameraAreaSelector.cpp \
-			 UseFaceDetection/facedetection_camera.cpp
+			 UseFaceDetection/facedetection_camera.cpp \
+			 utils.cpp
 
 INC = -isystem/usr/local/include \
       -IUseFaceDetection/include \

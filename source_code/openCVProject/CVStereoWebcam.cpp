@@ -80,7 +80,11 @@ void display_update(const unsigned int DISP_ID){
 	if(DISP_ID&PARAM)    imshow( PARAM_WIND,0);
 
 	if(DISP_ID&CAM_C) {
-	    imshow( CAM_C_WIND, global_data::fullScreenImage);
+	    imshow( CAM_C_WIND, global_data::image_c);
+	}
+
+	if (DISP_ID&FULL_IMAGE) {
+	    imshow( FULL_IMAGE_WIND, global_data::fullScreenImage);
 	}
 
 
@@ -110,7 +114,11 @@ void display_create(const unsigned int DISP_ID){
 
 	if(DISP_ID&CAM_C)    {
 	    cvNamedWindow(CAM_C_WIND,0);
-	    cvSetWindowProperty(CAM_C_WIND, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+	    //cvSetWindowProperty(CAM_C_WIND, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
+	}
+
+	if(DISP_ID&FULL_IMAGE) {
+	    cvNamedWindow(FULL_IMAGE_WIND,0);
 	}
 
 }

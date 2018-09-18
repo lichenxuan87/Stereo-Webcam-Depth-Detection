@@ -19,7 +19,7 @@
 #define RAW_DISP 64
 #define PARAM	128
 #define CAM_C 256
-
+#define FULL_IMAGE 512
 
 #define CAM1_WIND "WEBCAM ONE (LEFT) "
 #define CAM2_WIND "WEBCAM TWO (RIGHT)"
@@ -30,6 +30,7 @@
 #define PARAM_WIND  "BM STEREO CORRESPONDANCE PARAMETERS"
 #define RAW_DISPARITY_WIND "RAW DISPARITY"
 #define CAM_C_WIND "Camera C"
+#define FULL_IMAGE_WIND "Full image"
 
 #define IMAGE_LIST_DIR "list.txt"
 

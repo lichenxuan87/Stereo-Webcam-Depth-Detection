@@ -28,6 +28,7 @@
 
 #include "facedetection_camera.h"
 #include "CameraAreaSelector.h"
+#include "utils.h"
 
 
 /******* Shared Variables ******/
@@ -151,9 +152,9 @@ int main(int argc, const char* argv[])
 
 	//Create Display Widnows
     #if CALIB_DEBUG
-	    display_create(CAM1|CAM2|CAM_C|DISP|PROJ);
+	    display_create(CAM1|CAM2|CAM_C|DISP|PROJ|FULL_IMAGE);
     #else
-	    display_create(CAM1|CAM_C);
+	    display_create(CAM1|FULL_IMAGE);
     #endif
 
 	// Calibration Matrices
@@ -182,6 +183,7 @@ int main(int argc, const char* argv[])
 
 	// Full screen map
 	global_data::fullScreenImage.create(1080, 1920, CV_8UC3);
+	Mat transparentArea = global_data::fullScreenImage(Rect(584, 0, 960, 720));
 
 	while (key != ESC_KEY){
 		key=cvWaitKey(10);
@@ -240,59 +242,59 @@ int main(int argc, const char* argv[])
 		    faceBoundaries = detectFaceLocation(correspondance_data::grey_left_r);
 		}
 
-//		if (faceBoundaries.size() > 0) {
-//            cv::rectangle(global_data::image_left_rectified, faceBoundaries[0], CV_RGB(250, 230, 215), 4, 8, 0);
-//
-//
-//            static int x_center = 0;
-//            static int y_center = 0;
-//            int new_x_center = (faceBoundaries[0].x + faceBoundaries[0].width)/2;
-//            int new_y_center = (faceBoundaries[0].y + faceBoundaries[0].height)/2;
-//
-//            if ((new_x_center - x_center) * (new_x_center - x_center) + (new_y_center - y_center) * (new_y_center - y_center) >= 25)
-//            {
-//                x_center = new_x_center;
-//                y_center = new_y_center;
-//            }
-//
-//            keyPoints.push_back(KeyPoint(x_center, y_center, 1));
-//
-//            calculate_correspondance_depth_tracking(keyPoints, main_variables::Q);
-//
-//            keyPoints.clear();
-//		}
-
 		char image_text[50];
 		int x_center = 0;
 		int y_center = 0;
+		Rect biggestRect;
 		Vec4f averageCoodinate;
-		for (int i = 0; i < faceBoundaries.size(); i++) {
-		    cv::rectangle(global_data::image_left_rectified, faceBoundaries[i], CV_RGB(250, 230, 215), 4, 8, 0);
-		    x_center = (faceBoundaries[i].x + faceBoundaries[i].width)/2;
-		    y_center = (faceBoundaries[i].y + faceBoundaries[i].height)/2;
+		for (unsigned i = 0; i < faceBoundaries.size(); i++) {
+		    if (faceBoundaries[i].width * faceBoundaries[i].height > biggestRect.width * biggestRect.height) {
+		        biggestRect = faceBoundaries[i];
+		    }
+		}
 
-		    averageCoodinate = calculate_correspondance_depth_tracking(faceBoundaries[i]);
+		// If detect any face
+		if (biggestRect.width > 0) {
+		    cv::rectangle(global_data::image_left_rectified, biggestRect, CV_RGB(250, 230, 215), 4, 8, 0);
+
+		    averageCoodinate = calculate_correspondance_depth_tracking(biggestRect);
 
             if (averageCoodinate[2] > 0) {
+                x_center = (biggestRect.x + biggestRect.width)/2;
+                y_center = (biggestRect.y + biggestRect.height)/2;
                 sprintf(image_text,"x:%1.2f y:%1.2f z:%1.2f d:%1.2f", averageCoodinate[0], averageCoodinate[1], averageCoodinate[3], averageCoodinate[2]);
                 putText(global_data::image_left_rectified, image_text , Point(x_center, y_center), CV_FONT_HERSHEY_COMPLEX_SMALL, 1, Scalar(50,100,250));
             }
+
+            // Construct full screen image
+            Rect displayBoundary = areaSelector.selectAreaByViewerPosition(
+                    Vec3f(averageCoodinate[0], averageCoodinate[1], averageCoodinate[2]));
+
+            if (displayBoundary.x < 0 || displayBoundary.x > 640
+                || displayBoundary.y < 0 || displayBoundary.y > 480 ) {
+                drawTextInsideBlackBox(global_data::fullScreenImage, "Your view is in blind area!", Point(960, 900), CV_FONT_HERSHEY_DUPLEX);
+            } else {
+                Mat displayArea = global_data::image_c(displayBoundary);
+                resize(displayArea, transparentArea, Size(960,720));
+
+                sprintf(image_text,"Detected %ld faces, using largest.", faceBoundaries.size());
+                drawTextInsideBlackBox(global_data::fullScreenImage, image_text, Point(960, 900), CV_FONT_HERSHEY_DUPLEX);
+            }
+		} else {
+		    drawTextInsideBlackBox(global_data::fullScreenImage, "No face detected!", Point(960, 900), CV_FONT_HERSHEY_DUPLEX);
 		}
+
+
 
         #endif
 
-		// Construct full screen image
-		Rect displayBoundary = areaSelector.selectAreaByViewerPosition(
-		        Vec3f(averageCoodinate[0], averageCoodinate[1], averageCoodinate[2]));
-		Mat displayArea = global_data::fullScreenImage(displayBoundary);
-        resize(global_data::image_c, displayArea, Size(960,720));
 
 
 		// UPDATE DISPLAY
 #if CALIB_DEBUG
-		display_update(CAM1|CAM2|DISP|PROJ|RAW_DISP|PARAM|CAM_C);
+		display_update(CAM1|CAM2|DISP|PROJ|RAW_DISP|PARAM|CAM_C|FULL_IMAGE);
 #else
-		display_update(CAM1|CAM_C);
+		display_update(CAM1|FULL_IMAGE);
 #endif
 
 		//*------------------ CALC 3D POSITION UPON SPACE BAR PRESS  -----------------------------------------------------------------------*/
