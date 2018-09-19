@@ -29,6 +29,7 @@
 #include "facedetection_camera.h"
 #include "CameraAreaSelector.h"
 #include "utils.h"
+#include "Camera_consts.h"
 
 
 /******* Shared Variables ******/
@@ -182,8 +183,11 @@ int main(int argc, const char* argv[])
 	clock_gettime(CLOCK_MONOTONIC_RAW, &lastKernelTp); // Kernel time
 
 	// Full screen map
-	global_data::fullScreenImage.create(1080, 1920, CV_8UC3);
-	Mat transparentArea = global_data::fullScreenImage(Rect(584, 0, 960, 720));
+	global_data::fullScreenImage.create(DISP_SCREEN_VERTICAL_PIXELS, DISP_SCREEN_HORIZON_PIXELS, CV_8UC3);
+	Mat transparentArea = global_data::fullScreenImage(Rect(DISP_AREA_LEFTMOST_X_COODINATE,
+	                                                        DISP_AREA_UPMOST_Y_COODINATE,
+	                                                        DISP_AREA_HORIZON_PIXELS,
+	                                                        DISP_AREA_VERTICAL_PIXELS));
 
 	while (key != ESC_KEY){
 		key=cvWaitKey(10);
@@ -237,10 +241,10 @@ int main(int argc, const char* argv[])
 		clock_gettime(CLOCK_MONOTONIC_RAW, &curKernelTp);
 
 		// If time has elapsed 100ms
-		if (((curKernelTp.tv_sec - lastKernelTp.tv_sec) * 1000
-		        + (curKernelTp.tv_nsec - lastKernelTp.tv_nsec)/1000) > 100) {
+		//if (((curKernelTp.tv_sec - lastKernelTp.tv_sec) * 1000
+		//        + (curKernelTp.tv_nsec - lastKernelTp.tv_nsec)/1000) > 0) {
 		    faceBoundaries = detectFaceLocation(correspondance_data::grey_left_r);
-		}
+		//}
 
 		char image_text[50];
 		int x_center = 0;
@@ -267,11 +271,12 @@ int main(int argc, const char* argv[])
             }
 
             // Construct full screen image
-            Rect displayBoundary = areaSelector.selectAreaByViewerPosition(
-                    Vec3f(averageCoodinate[0], averageCoodinate[1], averageCoodinate[2]));
+            Rect displayBoundary = areaSelector.selectAreaByViewerPosition(averageCoodinate);
 
-            if (displayBoundary.x < 0 || displayBoundary.x > 640
-                || displayBoundary.y < 0 || displayBoundary.y > 480 ) {
+            if (displayBoundary.x < 0 || displayBoundary.x > CAMERA_X_AXIS_PIXEL_SIZE
+                || displayBoundary.y < 0 || displayBoundary.y > CAMERA_Y_AXIS_PIXEL_SIZE
+                || displayBoundary.x + displayBoundary.width > CAMERA_X_AXIS_PIXEL_SIZE
+                || displayBoundary.y + displayBoundary.height > CAMERA_Y_AXIS_PIXEL_SIZE) {
                 drawTextInsideBlackBox(global_data::fullScreenImage, "Your view is in blind area!", Point(960, 900), CV_FONT_HERSHEY_DUPLEX);
             } else {
                 Mat displayArea = global_data::image_c(displayBoundary);

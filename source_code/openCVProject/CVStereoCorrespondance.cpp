@@ -18,7 +18,7 @@ namespace module_data{
     // Increase num of disparity for nearer distance detection
     int nStereoNumDisparities       =  10; // (x+1)*16
 	int nStereoPreFilterCap			=  62; // x+1
-	int nStereoMinDisparity			=  180; // x-200
+	int nStereoMinDisparity			=  150; // x-200
 	int nStereoUniquenessRatio		=  5;
 
 	// For BM its value is 2

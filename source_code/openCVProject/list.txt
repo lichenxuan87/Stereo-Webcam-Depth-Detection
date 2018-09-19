@@ -22,11 +22,3 @@ Captures/left11.ppm
 Captures/right11.ppm
 Captures/left12.ppm
 Captures/right12.ppm
-Captures/left13.ppm
-Captures/right13.ppm
-Captures/left14.ppm
-Captures/right14.ppm
-Captures/left15.ppm
-Captures/right15.ppm
-Captures/left16.ppm
-Captures/right16.ppm

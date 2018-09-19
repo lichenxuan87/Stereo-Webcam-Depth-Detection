@@ -114,11 +114,12 @@ void display_create(const unsigned int DISP_ID){
 
 	if(DISP_ID&CAM_C)    {
 	    cvNamedWindow(CAM_C_WIND,0);
-	    //cvSetWindowProperty(CAM_C_WIND, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
 	}
 
 	if(DISP_ID&FULL_IMAGE) {
 	    cvNamedWindow(FULL_IMAGE_WIND,0);
+
+        cvSetWindowProperty(FULL_IMAGE_WIND, CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
 	}
 
 }
